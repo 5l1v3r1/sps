@@ -1,0 +1,247 @@
+SPS 4.3 - August 8, 2015
+- Fixed UTF-8 utilities in /src32/utils and /src64/utils so that they report invalid UTF-8, rather than exit with EXIT_FAILURE, if index is out of bounds.
+- Revised the internet checksum routine (checksum.c) to more accurately reflect RFC 1071. Declared sum to explicitly be unsigned 32-bit integer.
+- Removed extraneous htons() call in routines packing sockaddr_ll struct. e.g., device.sll_halen = htons (6u); changed to device.sll_halen = 6u;
+- For GTK+3 (64-bit) version, replaced deprecated GTK_STOCK icons with labels. e.g., GTK_STOCK_CANCEL replaced with "_Cancel".
+- For GTK+3 (64-bit) version, replaced deprecated gtk_scrolled_window_add_with_viewport() with gtk_container_add().
+- For GTK+3 (64-bit) version, replaced deprecated gtk_widget_modify_font() with gtk_widget_override_font(), which is, itself, deprecated since version 3.16.
+- For GTK+3 (64-bit) version, fixed bug in sps.ui in which entry319 didn't allow focus.
+- Fixed main.c in which entry319 was initially set to RN_SEED, which was not initialized to anything. Now set to RN_SEED0.
+- www.iso.org has now paywalled the country code file, so the latest version I had available is included in this distribution. It's not expected to change very frequently.
+
+SPS 4.2 - January 12, 2014
+- Fixed some memory leaks.
+- Fixed some situations in which a conditional depended on an uninitialized variable.
+- Replaced all strcpy() with strncpy(), strcmp() with strncmp(), strcat() with strncat(), and strlen() with strnlen().
+- Moved all memory allocation and reallocation functions to allocate.c.
+- Added check for len <= 0 in allocate.c functions.
+- Moved non-callback functions out of callbacks.c and into separate files.
+- Rearranged main.h to separate callback prototypes from non-callback prototypes.
+- Split parse_ipv4() into parse_ipv4() and show_cidr_or_range().
+- Separated loading and saving operations from on_button21_clicked() and on_button14_clicked() into load_file() and save_file(). load_file() can be found in load_file.c; save_file() in save_file.c.
+- In IP/ASN delegation page: clear second text entry when searching for a parameter entered into first text entry, and vice-versa. e.g., search IPv4 addresses, clear IPv6 address text entry, and vice-versa.
+- Replaced all g_malloc0() calls with calls to malloc() and memset(). Replaced most, but not all, g_free() calls with calls to free(). Calls to g_free (error) were unchanged since the memory wasn't allocated with malloc().
+- Changed type for many functions from gboolean to int. This allows additional flexibility in actions resulting from a wider variety returned values.
+- Changed memory management for RIR and country code data. Added some protection from runaway while loops.
+- Improved specificity and helpfulness of some error messages.
+- Changed a few occurrences of const gchar to const char.
+- Replaced all atoi() calls with new function ascii_to_int64().
+- Improved error handling for IP/ASN search page.
+- Combined repetitive code in compose_string(), compose_optstring(), and compose_exoptstring() into new functions hexascii_listing() and alphanum_and_symbols() in misc_utils.c.
+- Defined struct Pktinfo6 based on in6_pktinfo from <netinet/in.h>. This hopefully avoids "redefinition of in6_pktinfo" errors on some Linux variants. Modified neighbor_discovery.c accordingly.
+- Fixed: Functions which check data input from user interface now won't call ip6data_update() if incorrect data was entered.
+- Replaced random number generation functions with more uniform generator with period of 2^63 and arbitrary stride. Changed range of some values of random IPv4 and IPv6 addresses. First value of random IPv4 address now has range [1, 255], rest are [0, 255]. First value of random IPv6 address now has range [1, 65535], rest are [0, 65535]. As a consequence of this change, the randomized addresses and source ports will follow the same sequence each time SPS is run.
+- Added a new tab to the notebook, labeled "PRNG", which contains text entries for the seed and stride of the pseudo-random number generator.
+- For functions that pass no arguments, "void" was added to the function definition. Compiler will now throw an error if such a function is called and any parameters are passed as arguments.
+- Removed checkbuttons for padding/not padding the ethernet frame to minimum requirements. This feature broke SPS, starting with version 4.0, and added little value. NOTE: THIS MEANS SPS SETTINGS FILES WILL NOT BE COMPATIBLE WITH PREVIOUS VERSIONS.
+- Removed g_slice_new (SPSData) and g_slice_free (SPSData, data) calls in main.c and replaced with pointer (data) to instantiation of SPSData struct (spsdata).
+- Fixed bugs in main.c where the file_exists() calls and setting of data->rir_file_loaded and data->countries_loaded flags was not based on appropriate conditionals.
+- Changed arp() and neighbor_discovery() so that they receive IP address and interface name as arguments, making those functions more independent of the user interface.
+- Fixed: In on_documentation_activate(), increased memory allocation for documentation.txt by 1 byte, and set it to 0 to ensure string termination. SPS would sometimes seg. fault because of this.
+- In on_button56_clicked(), increased memory allocation for country code file by 1 byte, and set it to 0 to ensure string termination. SPS would sometimes seg. fault because of this.
+- In main.c, only free array data->cc if flag data->countries_loaded = 1.
+- In ipv4_tr_send(), swapped sin.sin_family = AF_INET; and memset (&sin, 0, sizeof (sin)); statements since their order is wrong.
+- Added memset (&device, 0, sizeof (device)); statement where it should've been in order to initialize the sockaddr_ll struct. Same for some occurrences of sockaddr_in struct.
+- Re-named grab_line() to read_line(), cleaned-up logic, and fixed a bug.
+- Added freeaddrinfo (res); to thishost_ipv4().
+- Changed maximum value of test in on_entry18_activate() to be, in binary, one 0, followed by 63 ones.
+- Removed g_thread_init() call from 32-bit GTK+2 version's main.c. It wasn't necessary.
+- Added function date_and_time() in date_and_time.c to return date and time for send and traceroute functions.
+- Removed post_send_message() and renamed send_message() to post_message(). Changed all post_send_message() calls to post_message().
+- Removed sleep (1) from post_message(), as well as all time and date code since date_and_time() was introduced.
+- Removed post_tr_message() and changed all calls to it to post_message() instead.
+- Fixed a bug in which load_file() wouldn't call tr_settings_show() if traceroute window wasn't open. Since traceroute settings are in the main window (sps.ui), the traceroute window (traceroute.ui) need not be open for these settings to be shown.
+- Simplified message reporting for IP/ASN RIR searches to use post_message(); removed redundant functions in rir_utils.c. IP/ASN RIR searches should be much faster.
+- Removed sleep (1) at end of ftp_rir() since closing the ftp_rir() thread will not free memory still being used by idle functions.
+- Added comment section containing GPL to beginning of each of the .ui files.
+- Fixed bug in load_file() where arrays icmp4hdr and icmp6hdr were indexed beyond their bounds.
+- Changed memory allocation for some RIR searches so that it calls realloc() as necessary to add memory in RIR_MEM_BLOCK chunks to search results array. This removes any hard-coded memory limits for results array.
+- Replaced compare() function with calls to memcmp(), which is likely to be slightly faster.
+- Changed compiler optimization to O3.
+- Added many warning flags to compiler options.
+- In dsthop_option(), added a check which aborts if user tries to remove a non-existent option.
+- In dsthop_option(), added a check and error dialog to inform user they have requested more than the maximum number of hop-by-hop or destination options.
+- In dsthop_opt_view(), changed memory allocation for "string" to vary depending upon number and length of options to display.
+- In ip4_option(), added a check which aborts if user tries to remove a non-existent option.
+- In ip4_option(), added a check and error dialog to inform user they have requested more than the maximum number of IPv4 header options.
+- In tcp4_option() and tcp6_option(), added a check which aborts if user tries to remove a non-existent option.
+- In tcp4_option() and tcp6_option(), added a check and error dialog to inform user they have requested more than the maximum number of TCP header options.
+- In opt_view(), changed memory allocation for "string" to vary depending upon number and length of options to display.
+- Added a /utils sub-directory to /src32 and /src64 directories. It contains three programs: a UTF-8 validator (validate_utf8.c), a lower-case to upper-case UTF-8 converter (raise_case.c), and an upper-case to lower-case UTF-8 converter (drop_case.c). These three routines are not part of SPS and can be used as general tools when modifying the documentation.txt and sps_file_format.txt files, or any other applications the user chooses.
+- Fixed: ip6_paylen() was using find6_unfraglen() + find6_fraglen() to get IPv6 header payload length. This is incorrect, since the IPv6 header is not part of the payload length.
+- Fixed: added a missing htons() for IPv6 header payload length in ip6data_update().
+- Changed on_entry437_activate() to only call ip6data_update() if authentication header is attached.
+- Created update_auth_pad() in auth_header.c. Moved length/pad calculations into it.
+- Created update_route_len() in routing_header.c. Moved length calculations into it.
+- Replaced checkbuttons with button and textview pairs for the "Include a **** header" portion at the top of the extension header windows. Revised code accordingly. This prevents strange behavior when extension header windows are opened repeatedly.
+- Replaced calls to gtk_image_new_from_stock (GTK_STOCK_DIALOG_ERROR, GTK_ICON_SIZE_DIALOG); with calls to image = gtk_image_new_from_icon_name ("dialog-error", GTK_ICON_SIZE_DIALOG);
+- Replaced calls to gtk_image_new_from_stock (GTK_STOCK_DIALOG_WARNING, GTK_ICON_SIZE_DIALOG); with calls to image = gtk_image_new_from_icon_name ("dialog-warning", GTK_ICON_SIZE_DIALOG);
+- In main.c, added missing data->button* = GTK_BUTTON (gtk_builder_get_object (builder, "button*")); for routing and ESP extension headers.
+- Added a check such that an extension header cannot be appended or inserted if no extension header options or data is specified.
+- Values for "Insert after option #" entries must now be specified and greater than zero, otherwise no insertion will take place.
+- Added default value of zero for all ipopt_*_after and tcpopt_*_after in default files. e.g., data->ipopt_tcp4_after = 0; in ipv4_defaults.c
+- Added default value of zero for hbhopt_after, dstopt_after, hbhopt_remove, and dstopt_remove in main.c.
+- Added default value of zero to hophdr[*].hdr_len in ipv6_defaults.c and ipv6_traceroute_defaults.c.
+- Added default value of zero to dstfhdr[*].hdr_len and dstlhdr[*].hdr_len in ipv6_defaults.c and ipv6_traceroute_defaults.c.
+- Added default value of zero to dstf_hdr_flag[13] and dstl_hdr_flag[13]. These were missing for this specific packet.
+- Added default value of zero to routehdr[*].hdr_len, routehdr[*].routing_type, and routehdr[*].segs_left in ipv6_defaults.c and ipv6_traceroute_defaults.c.
+- Added default value of zero to authhdr[*].pay_len, authhdr[*].reserved, authhdr[*].spi, and authhdr[*].seq in ipv6_defaults.c and ipv6_traceroute_defaults.c.
+- Added default value of zero to esphdr[*].spi, esphdr[*].seq, esptail[*].pad_len in ipv6_defaults.c and ipv6_traceroute_defaults.c.
+- If a hop-by-hop header is attached and all options are subsequently removed, the hop-by-hop header will now automatically detach.
+- Moved the updating of attached/detached textview and state of hex/ascii radiobuttons from hop_win() to hop_show().
+- If a destination header is attached and all options are subsequently removed, the destination header will now automatically detach.
+- Moved the updating of attached/detached textview and state of hex/ascii radiobuttons from dst_win() to dst_show().
+- Moved the updating of attached/detached textview and state of hex/ascii radiobuttons from route_win() to route_show().
+- Moved the updating of attached/detached textview, transport/tunnel textview, and state of hex/ascii radiobuttons from auth_win() to auth_show().
+- Moved the updating of attached/detached textview, transport/tunnel textview, and state of hex/ascii radiobuttons from esp_win() to esp_show().
+- Fixed bug in check_mtu() for IPv6 in which length of fragmentation header was not included for fragmentation case.
+- Broke-up check_mtu() into check_mtu(), min4_mtu(), min6_mtu(), min6to4_mtu(), change_mtu(), and report_mtu_change().
+- When routing data is loaded from file and displayed in routing header window, data entry format is set to decimal to be consistent with display of file values.
+- In dsthop_opt_insert_after_entry(), removed check for insertion after non-existant option, since this check is done in dsthop_option().
+- Added checks to limit size of extension header data entered via text entry or via file. If it is too large, the data is truncated and a warning dialog advises the user of the truncation.
+- Fixed bug: Traceroute will now actually randomize source ports if requested.
+- IP addresses and port numbers will now update in user interface after sending if they were set to be randomized during sending. This applies to traceroute port numbers as well.
+- Added a scrolled-window (and viewport) parent to the notebook in sps.ui.
+
+SPS 4.1p - November 8, 2013
+Quick patches prior to SPS-4.2 release:
+- Padding of ethernet frame (to meet minimum frame length) by SPS has been disabled due to bugs. Not a really useful feature anyway. Will be removed in ver 4.2.
+- Zeroing of some arrays in main.c added.
+- In on_about_requested(), added a viewport and scrolled window. Removed the restriction on user resizing of window.
+
+SPS 4.1 - August 29, 2013
+- Removed g_idle_add ((GSourceFunc) cc_not_available, data) calls from: http_sock(), send_get(), and http_recv(), since it's already called in get_countries() if those functions return EXIT_FAILURE.
+- Removed g_idle_add ((GSourceFunc) rir_not_available, data) calls from: cntl_sock(), data_sock(), cntl_send(), cntl_recv(), and data_recv(), since it's already called in ftp_rir() if those functions return EXIT_FAILURE.
+- Added g_idle_add ((GSourceFunc) rir_not_available, data) to ftp_rir() where parse_ip4_port() and parse_ip6_port() are called if those functions return EXIT_FAILURE.
+- Removed g_idle_add ((GSourceFunc) rir_not_available, data) from parse_ip4_port() and parse_ip6_port() since it is now called in ftp_rir() if those functions return EXIT_FAILURE. See change immediately above.
+- In data_sock(), changed const gchar *port to const char *port.
+- In http_sock(), changed const gchar *port to const char *port. Changed main.h to reflect this.
+- Moved the file-saving part of http_recv() to get_countries() so that http_recv() becomes a generic http receiving function.
+- In ran_val2(), changed multiplier from 65535 to 65536 so that range of results includes 65535.
+- Changed GET statement in get_countries() to version 1.1, and removed unnecessary headers.
+- In http_recv(), added if-statement to catch status == ECONNREFUSED, remote host refused connection.
+- Removed "struct" from some casts in g_malloc0() calls in main.c.
+- Changed RIR delegation filenames to the new format: <RIR name>-delegated-extended-latest.
+- All RIR names, HTTP URLs, FTP URLs, delegation file directory locations, and delegation filenames are now stored in file rir-info.txt and loaded in main.c. This allows easy changes without rebuilding the SPS executable.
+- ISO's URL, country code file directory location, and country code filename are now stored in file country-info.txt and loaded in main.c. This allows easy changes without rebuilding the SPS executable.
+
+SPS 4.0 - May 22, 2013
+- For SPS Activity window, removed the non-standard differentiation between 'packets' and 'ethernet frames'.
+- Re-wrote this_host() so that all interfaces and associated IP addresses are listed in IPv4 and IPv6 textviews on Host/IP page.
+- Removed separate ethernet header for 6to4. Now uses IPv6 ethernet headers instead, which gives more flexibility anyway.
+- Moved 'Tunnel IPv6 over IPv4 (6to4)' checkbutton29 from Traceroute page in sps.ui to traceroute.ui.
+- Re-wrote most of SPS in order to use generic functions whenever possible to reduce code repetition.
+- Changed send routines to run in a separate thread.
+- Introduced stored ethernet frames in order to facilitate fragmentation.
+- Added automatic fragmentation to all IPv4 and IPv6 packets, including for traceroute.
+- Revised payload truncation routine and the warning given when too-large payloads are loaded or typed-in. Added a fragmentation warning with this.
+- Added traceroute packet settings to Load/Save page.
+- Added IP header options to IPv4 TCP, ICMP, and UDP, including for traceroute.
+- Added TCP header options to IPv4 and IPv6 TCP, including for traceroute.
+- Added IP and TCP options (and padding) to file load and save binary file, including for traceroute.
+- Changed Load File routine (on_button21_clicked()) to allocate buffer based on file size rather than a fixed size of 400,000 bytes. This is because option lengths and payload data are variable length.
+- Added spinbuttons to allow user to change MTU for each packet type, including 6to4 and traceroute.
+- Added GNU Free Documentation License for file documentation.txt. i.e., the SPS manual.
+- Added GNU Free Documentation License for file sps_file_format.txt.
+- Added IPv6 extension headers: hop-by-hop, destination (first and last), routing, authentication, and encapsulating security payload (ESP). Fragmentation header already added as mentioned above.
+- Added IPv6 extension headers to file Load/Save page.
+- Added error handling to all inet_ntop() and inet_pton() calls.
+- Changed default traceroute source addresses to be loopback; user must now choose from results for this host on Host/IP page.
+- Converted to using generic memory allocation routines for most common data types (gint, gint *, gint **, gchar, gchar *, etc).
+- Moved rir_name, rir_www, rir_ftp, rir_dir, and rir_file arrays into the SPSData struct.
+- Fixed bug in data_sock(): removed ampersand from "port = (const gchar *) &buf;". Also removed malloc for port since buf is used instead.
+- Replaced some printf calls with "%u", with "%i", as appropriate.
+- Replaced some printf calls with "%u", with "%" PRIu8, as approrpiate.
+- Replaced all printf calls with "%hu", with "%" PRIu16
+- Replaced all printf calls with "%lu", with "%" PRIu32
+- Replaced all printf calls with "%llu", with "%" PRIu64
+- Replaced all unsigned short int and gushort typing with uint16_t to ensure platform independence.
+- Replaced all unsigned long int typing with uint32_t to ensure platform independence.
+- Replaced all unsigned long long int typing with uint64_t to ensure platform independence.
+- Introduced src32, src64, bin32, and bin64 directories to tarball. /bin32 is 32-bit with GTK+ 2, and /bin64 is 64-bit with GTK+ 3.
+- Removed deprecated function g_thread_init() from main.c for 64-bit GTK+ 3 version.
+- Replaced all deprecated g_thread_create() calls with g_thread_new() calls for 64-bit GTK+ 3 version.
+- Changed all GtkVBox and GtkHBox deprecated widgets to GtkGrid widgets in *.ui for 64-bit GTK+ 3 version.
+- Changed all GtkTable deprecated widgets to GtkGrid widgets in *.ui for 64-bit GTK+ 3 version.
+- Fixed a few erroneous htons() calls which should've been ntohs() calls.
+- Added checkbuttons to either direct SPS to pad the ethernet frame to minimum length, or let the interface do it.
+- Fixed a bug in which randomize checkbutton state was saved/loaded prior to associated entry. The result was sometimes the checkbutton was set and IP address or port number randomized, even though file being loaded had a specific number and checkbutton should be unchecked.
+
+SPS 3.1 - September 14. 2012
+- Modified TCP and UDP traceroutes to report destination port number in output.
+- Created new report_warning() and report_error() routines for callbacks.c to use grid instead of hbox. Currently commented until we go to GTK+ 3.
+- Created interface_getmac() to replace repetitive code. Made socket request IP-version agnostic by using PF_PACKET, SOCK_RAW, ETH_P_ALL.
+- Added feature on Host / IP page to report interface MTU.
+- Removed declaration of ip4_flags in icmp4_tr_show() and udp4_tr_show() since it wasn't used.
+- Fixed: Changed all declarations of ip4_flags from unsigned char to int, since fragmentation offset is 13 bits and can't be expressed by unsigned char.
+
+SPS 3.0 - July 8, 2012
+- Fixed bug in callbacks.c where IPv6 header's Payload Length variable is set to include IPv4 header length when data is entered via keyboard or file.
+- Fixed bug in callbacks.c where clicking Restore Default Values for IPv4 didn't toggle the Specify Ethernet Header checkbutton.
+- Fixed comments for mallocs of payload arrays in main.c.
+- Added button declarations in main.h for Restore Default Values buttons on TCP, ICMP, and UDP pages (IPv4 and IPv6).
+- In main.c, added code to obtain Restore Default Values buttons from UI (related to item above).
+- Changed Restore Default Values callbacks so that Interface Name entry is cleared.
+- Changed 'ASCII data entry' labels to 'UTF-8/ASCII data entry', since GTK handles UTF-8 smoothly. ASCII is merely a subset of UTF-8.
+- Added configurable TCP, UDP, and ICMP traceroute capability.
+- Added ASN/IP delegation page with country name/code forward and reverse-searches.
+
+SPS 2.1 - February 20, 2012
+- Fixed error message when invalid IPv6 addresses are entered in IP-to-hostname converter.
+- Changed message when invalid IPv4 addresses are entered in IP-to-hostname converter from Warning to Error.
+- Added etched-in frame border for This Host portion of Host/IP/MAC page.
+- Fixed: IP checksum was not updated on screen (but was internally) if source IP randomize button was toggled to checked condition.
+- When randomize checkbutton is toggled to checked condition on TCP or UDP source port, the port number is now updated with random value.
+- Added facility for TCP data on IPv4 and IPv6 TCP pages.
+- Fixed: When Restore Default Values button is pressed, the Randomize checkbuttons are now checked.
+- Added scroll bars to all pages. These will appear only if needed.
+- Changed Load File routine to only check for substring "Simple Packet Sender", and ignore " 2.0" in order to make it backward compatible.
+- Changed Save File to only save "Simple Packet Sender". i.e., no longer save version number (see comment above).
+
+SPS 2.0 - January 24, 2012
+- Nearly all functions of SPS have been modified. A list of highlights follows.
+- Added error handling on all malloc calls.
+- Replaced all inet_aton calls with inet_pton calls.
+- Replaced all inet_ntoa calls with inet_ntop calls.
+- Reverted length limit change made in SPS 1.2 for IPv4 UDP payload in sps.glade. Fixed to 65507.
+- Added an IPv4 ICMP payload data text entry.
+- Added length limit on IPv4 ICMP payload data of 65507.
+- Introduced IPv6 TCP, ICMP, and UDP pages.
+- Added ethernet header options for IPv4.
+- Added IPv6 ethernet frames.
+- Added IPv6 over IPv4 tunnels (6to4).
+- Added IP to Link_layer (MAC) address tool which uses ARP (IPv4) or Neighbor Discovery (IPv6).
+- Added new ways of entering ICMP and UDP data. Options are now: ASCII via keyboard, hex values via keyboard, and by loading a file.
+- Renamed sps.glade to sps.ui as true glade files have been deprecated; sps.ui is really a GTK builder file.
+- On Host / IP page, added check for valid IPv6 entry in IP-to-hostname converter.
+- On Host / IP page, fixed This Host IP Address textview to show all IP addresses found with getaddrinfo; it erroneously only showed last the result.
+- Re-wrote tcp4_checksum.c to not use psd_tcp.h anymore, but use memcpy to build pseudo-header. This is more amenable to adding arbitrary data at end.
+- Fixed bug in main.c in which TCP urgent pointer was set after the checksum calculation instead of before.
+- In callbacks.c, rewrote packet send functions (a bit tidier).
+- Introduced icmp4_checksum() to deal with checksums when there is data.
+- Introduced a feature to load and save packet values and settings (Load/Save page).
+- Introduced a button to restore default settings on Send, TCP, ICMP, and UDP pages.
+
+SPS 1.2 - October 16, 2011
+- Fixed Makefile which attempted to compile .h files.
+- Superfluous parameters were being passed to udp_checksum and they were removed.
+- psd_udp.h was removed as the pseudo-header struct for UDP was not being used (difficult with variable payload length).
+- Fixed minor memory leaks in callbacks.c: Arrays ip_tcp_flags, ip_icmp_flags, and ip_udp_flags were not freed before return if user entry was invalid.
+- Fixed some inadvertent && that were used in callbacks.c when & should have been used.
+- Length limit for UDP payload in sps.glade was incorrect. Fixed to 65527.
+- Imposed length limits on IP address entries in sps.glade.
+- Re-wrote tcp_checksum.c to not use psd_tcp.h anymore, but use memcpy to build pseudo-header. This is more amenable to adding arbitrary data at end.
+- Fixed bug in main.c in which TCP urgent pointer was set after the checksum calculation instead of before.
+
+SPS 1.1 - July 21, 2011
+- Fixed malloc for udp_payload in main.c. Should be 65527 (65536 - 8 bytes).
+- There was a bug in callbacks.c in that if you went from a UDP datagram with data to clearing that data,
+  it didn't actually clear it.
+- Whenever udp_checksum is called, the UDP checksum is explicitly set to zero first.
+- There was a bug in main.c in that the hostname was harcoded to 2.local for testing purposes.
+  This was removed as part of the changes below.
+- Modified sps.glade (i.e., the GUI) Host/IP tab to handle IPv4 and IPv6.
+- Modified callbacks.c to provide callback functions to the new setup on the host-ip page of sps.glade.
+
+SPS 1.0 - July 3, 2011
+- Initial release.
